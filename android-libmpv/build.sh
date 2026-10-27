@@ -64,6 +64,10 @@ for lib in libavcodec libavdevice libavfilter libavformat libavutil libswresampl
 	cp -L "$prefix/lib/$lib.so" "$out/lib/"
 done
 cp -L "$ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" "$out/lib/"
+# Debug information is not shipped (mpv-android builds FFmpeg with --disable-stripping).
+for so in "$out"/lib/*.so; do
+	"$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" --strip-debug "$so"
+done
 # Every library a shipped one needs must be shipped too, or be part of Android.
 system_libs='libc.so libm.so libdl.so liblog.so libandroid.so libEGL.so libGLESv2.so libGLESv3.so libOpenSLES.so libmediandk.so libz.so libvulkan.so libaaudio.so'
 for so in "$out"/lib/*.so; do
