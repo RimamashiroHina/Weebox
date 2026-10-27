@@ -4,8 +4,8 @@
 # with mpv-android's own build scripts at a pinned commit and two changes only:
 #   - FFmpeg: --enable-version3 without --enable-gpl  (FFmpeg under LGPL v3)
 #   - mpv:    -Dgpl=false                             (libmpv under LGPL v2.1+)
-# The result is refused if either still reports GPL, or if a library is not aligned for 16 KB
-# pages. Output: out/lib (the libraries), out/MANIFEST.txt, and out/source.tar.xz, the
+# The result is refused if either still reports GPL, or if a 64-bit library is not aligned for
+# 16 KB pages. Output: out/lib (the libraries), out/MANIFEST.txt, and out/source.tar.xz, the
 # corresponding source of everything in out/lib (build scripts, patches and all sources).
 set -euo pipefail
 
@@ -86,7 +86,9 @@ for so in "$out"/lib/*.so; do
 			exit 1
 		fi
 	done
-	# 16 KB pages: every LOAD segment aligned to at least 0x4000.
+	# 16 KB pages: every LOAD segment aligned to at least 0x4000. Android uses 16 KB pages only
+	# with 64-bit systems; 32-bit ones keep 4 KB pages (the NDK's own 32-bit libc++ is 4 KB).
+	[ "$abi" = armeabi-v7a ] && continue
 	for align in $("$readelf" -lW "$so" | awk '$1=="LOAD" { print $NF }'); do
 		if (( align < 16384 )); then
 			echo "$(basename "$so") is not aligned for 16 KB pages ($align)" >&2
