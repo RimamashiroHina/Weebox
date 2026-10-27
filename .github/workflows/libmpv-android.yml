@@ -12,9 +12,20 @@ permissions:
   contents: read
 
 jobs:
-  arm64:
+  build:
+    name: ${{ matrix.abi }}
     runs-on: ubuntu-24.04
     timeout-minutes: 240
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - arch: arm64
+            abi: arm64-v8a
+          - arch: armv7l
+            abi: armeabi-v7a
+          - arch: x86_64
+            abi: x86_64
     steps:
       - uses: actions/checkout@v4
 
@@ -25,18 +36,20 @@ jobs:
           sudo pip3 install --break-system-packages meson
 
       - name: Build
-        run: bash android-libmpv/build.sh
+        run: bash android-libmpv/build.sh ${{ matrix.arch }}
 
       - uses: actions/upload-artifact@v4
         with:
-          name: libmpv-android-lgpl-arm64-v8a
+          name: libmpv-android-lgpl-${{ matrix.abi }}
           path: |
             android-libmpv/out/lib/
             android-libmpv/out/MANIFEST.txt
             android-libmpv/out/lgpl.patch
             android-libmpv/out/build.sh
 
+      # The same sources serve every architecture.
       - uses: actions/upload-artifact@v4
+        if: matrix.arch == 'arm64'
         with:
           name: libmpv-android-lgpl-source
           path: android-libmpv/out/source.tar.xz

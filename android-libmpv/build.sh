@@ -1,12 +1,21 @@
 #!/bin/bash
-# Builds the LGPL libmpv + FFmpeg that Weebox ships on Android (arm64-v8a), with mpv-android's
-# own build scripts at a pinned commit and two changes only:
+# Builds the LGPL libmpv + FFmpeg that Weebox ships on Android, for one architecture:
+#   build.sh arm64 | armv7l | x86_64   (arm64-v8a, armeabi-v7a, x86_64; arm64 when omitted)
+# with mpv-android's own build scripts at a pinned commit and two changes only:
 #   - FFmpeg: --enable-version3 without --enable-gpl  (FFmpeg under LGPL v3)
 #   - mpv:    -Dgpl=false                             (libmpv under LGPL v2.1+)
 # The result is refused if either still reports GPL, or if a library is not aligned for 16 KB
 # pages. Output: out/lib (the libraries), out/MANIFEST.txt, and out/source.tar.xz, the
 # corresponding source of everything in out/lib (build scripts, patches and all sources).
 set -euo pipefail
+
+arch="${1:-arm64}"
+case "$arch" in
+	arm64) abi=arm64-v8a; triple=aarch64-linux-android ;;
+	armv7l) abi=armeabi-v7a; triple=arm-linux-androideabi ;;
+	x86_64) abi=x86_64; triple=x86_64-linux-android ;;
+	*) echo "Unknown architecture '$arch' (arm64, armv7l or x86_64)" >&2; exit 1 ;;
+esac
 
 MPV_ANDROID_REPO=https://github.com/mpv-android/mpv-android
 # Release 2026-09-17 of mpv-android.
@@ -45,25 +54,25 @@ fi
 IN_CI=1 ./include/download-sdk.sh
 IN_CI=1 ./include/download-deps.sh
 
-# --- build (dependencies, FFmpeg, then libmpv) for arm64
-./buildall.sh --arch arm64 mpv
+# --- build (dependencies, FFmpeg, then libmpv) for the architecture
+./buildall.sh --arch "$arch" mpv
 
-prefix="$PWD/prefix/arm64"
+prefix="$PWD/prefix/$arch"
 . ./include/depinfo.sh
 ndk="$PWD/sdk/android-ndk-$v_ndk"
 readelf="$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-readelf"
 
 # --- licence checks
-grep -q '^#define CONFIG_GPL 0$' deps/ffmpeg/_build_arm64/config.h || { echo "FFmpeg was configured as GPL" >&2; exit 1; }
-grep -q '^#define CONFIG_NONFREE 0$' deps/ffmpeg/_build_arm64/config.h || { echo "FFmpeg was configured as nonfree" >&2; exit 1; }
-grep -q '^#define HAVE_GPL 0$' deps/mpv/_build_arm64/config.h || { echo "mpv was configured as GPL" >&2; exit 1; }
+grep -q '^#define CONFIG_GPL 0$' deps/ffmpeg/_build_$arch/config.h || { echo "FFmpeg was configured as GPL" >&2; exit 1; }
+grep -q '^#define CONFIG_NONFREE 0$' deps/ffmpeg/_build_$arch/config.h || { echo "FFmpeg was configured as nonfree" >&2; exit 1; }
+grep -q '^#define HAVE_GPL 0$' deps/mpv/_build_$arch/config.h || { echo "mpv was configured as GPL" >&2; exit 1; }
 
 # --- the libraries: libmpv, what it needs from the prefix, and the NDK's C++ runtime
 cp -L "$prefix/lib/libmpv.so" "$out/lib/"
 for lib in libavcodec libavdevice libavfilter libavformat libavutil libswresample libswscale; do
 	cp -L "$prefix/lib/$lib.so" "$out/lib/"
 done
-cp -L "$ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/aarch64-linux-android/libc++_shared.so" "$out/lib/"
+cp -L "$ndk/toolchains/llvm/prebuilt/linux-x86_64/sysroot/usr/lib/$triple/libc++_shared.so" "$out/lib/"
 # Debug information is not shipped (mpv-android builds FFmpeg with --disable-stripping).
 for so in "$out"/lib/*.so; do
 	"$ndk/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip" --strip-debug "$so"
@@ -89,6 +98,7 @@ strings "$out/lib/libavcodec.so" | grep -q 'LGPL version 3 or later' || { echo "
 
 # --- what went in
 {
+	echo "Android ABI $abi"
 	echo "mpv-android $MPV_ANDROID_REPO @ $MPV_ANDROID_COMMIT (+ lgpl.patch)"
 	echo "NDK $v_ndk ($v_ndk_n)"
 	for dep in deps/*/; do
@@ -100,7 +110,7 @@ strings "$out/lib/libavcodec.so" | grep -q 'LGPL version 3 or later' || { echo "
 	echo "mbedtls $v_mbedtls, freetype $v_freetype, fribidi $v_fribidi, harfbuzz $v_harfbuzz, unibreak $v_unibreak, libxml2 $v_libxml2, fontconfig $v_fontconfig, lua $v_lua, curl $v_curl"
 	echo
 	echo "FFmpeg licence: $(strings "$out/lib/libavcodec.so" | grep -m1 'LGPL version')"
-	echo "mpv: $(grep -m1 'HAVE_GPL' deps/mpv/_build_arm64/config.h)"
+	echo "mpv: $(grep -m1 'HAVE_GPL' deps/mpv/_build_$arch/config.h)"
 	echo
 	(cd "$out/lib" && sha256sum *.so)
 } > "$out/MANIFEST.txt"
