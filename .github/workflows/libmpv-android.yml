@@ -1,0 +1,42 @@
+name: libmpv Android (LGPL)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - android-libmpv/**
+      - .github/workflows/libmpv-android.yml
+
+permissions:
+  contents: read
+
+jobs:
+  arm64:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y autoconf pkgconf libtool ninja-build python3-pip gperf nasm wget xz-utils
+          sudo pip3 install --break-system-packages meson
+
+      - name: Build
+        run: bash android-libmpv/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libmpv-android-lgpl-arm64-v8a
+          path: |
+            android-libmpv/out/lib/
+            android-libmpv/out/MANIFEST.txt
+            android-libmpv/out/lgpl.patch
+            android-libmpv/out/build.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: libmpv-android-lgpl-source
+          path: android-libmpv/out/source.tar.xz
