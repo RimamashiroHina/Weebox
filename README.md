@@ -4,6 +4,16 @@ Releases of Weebox, an anime streaming app for Windows and Android.
 
 Download the latest version from the [Releases](../../releases/latest) page.
 
+## Sources
+
+Weebox comes empty: it hosts no video. Copy one of these links and paste it into the app (the
+tutorial shown at first launch explains where), or later in Settings › Sources.
+
+| Source repository | Content | Link |
+|---|---|---|
+| Sources FR | French anime, VF and VOSTFR | https://drive.google.com/file/d/1mj_4l7ZpEQexcmdx4XhLv7VtaErJawbr/view?usp=sharing |
+| Sources +18 | Adult catalogue (18+ only) | https://drive.google.com/file/d/1P351e7jv-g6JHq-M79G0Mzwp-OtF1jHy/view?usp=sharing |
+
 ## Video player libraries (LGPL)
 
 On Android, Weebox plays video with [libmpv](https://mpv.io) and [FFmpeg](https://ffmpeg.org),
