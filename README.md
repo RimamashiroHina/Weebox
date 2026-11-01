@@ -1,13 +1,17 @@
 # Weebox
 
-Releases of Weebox, an anime streaming app for Windows and Android.
+Releases of Weebox, a free anime app for Windows, Android and Android TV: watch, read, and
+share it all with your friends.
 
 Download the latest version from the [Releases](../../releases/latest) page.
 
 ## Sources
 
-Weebox comes empty: it hosts no video. Copy one of these links and paste it into the app (the
-tutorial shown at first launch explains where), or later in Settings › Sources.
+Weebox hosts no video, and you have nothing to set up: when you open an anime, Weebox installs
+the sources that have it, in your language (the 18+ ones only once 18+ is unlocked in Settings).
+The same source lists are in the app's Store, added in one tap.
+
+You can also add them by link, in Settings › Plugins:
 
 | Source repository | Content | Link |
 |---|---|---|
