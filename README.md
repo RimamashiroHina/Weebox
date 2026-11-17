@@ -3,6 +3,8 @@
 Releases of Weebox, a free anime app for Windows, Mac, Android, Android TV and iPhone: watch,
 read, and share it all with your friends.
 
+Website: **[weebox.pages.dev](https://weebox.pages.dev)**
+
 Download the latest version from the [Releases](../../releases/latest) page. For Mac and iPhone,
 follow the install guide attached to the release (`INSTALLATION-GUIDE-Mac.md`,
 `INSTALLATION-GUIDE-iPhone.md`).
